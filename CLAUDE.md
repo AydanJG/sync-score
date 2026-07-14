@@ -19,23 +19,30 @@ mechanic — framing is teamwork/friendship compatibility only.
 ## Project structure
 ```
 sync-score/
-├── default.project.json      # Rojo config: maps folders below to Roblox services
+├── default.project.json      # Rojo config: maps folders below to Roblox services + RemoteEvents
 ├── src/
 │   ├── server/                    # -> ServerScriptService
-│   │   ├── main.server.luau       # entry point
-│   │   ├── PairingService.luau    # friend-invite -> private server via TeleportService
+│   │   ├── main.server.luau       # entry point, bootstraps PairingService + RoundService
+│   │   ├── PairingService.luau    # reserve private server + friend-invite pairing
+│   │   ├── RoundService.luau      # Trust round orchestration (roles, timer, scoring)
 │   │   └── ScoreService.luau      # scoring formula + calculation
 │   ├── client/                    # -> StarterPlayer.StarterPlayerScripts
-│   │   ├── main.client.luau       # entry point
+│   │   ├── main.client.luau       # entry point, wires round start/end UI
 │   │   └── UI/
+│   │       ├── LobbyScreen.luau   # Invite Friend button
+│   │       ├── BlindOverlay.luau  # full-screen overlay for the "blind" role
 │   │       └── ResultsScreen.luau # Sync Score reveal screen
 │   └── shared/                    # -> ReplicatedStorage.Shared
-│       └── Config.luau            # shared constants
+│       ├── Config.luau            # shared constants (tags, roles, penalties)
+│       └── Remotes.luau           # typed access to ReplicatedStorage.Remotes
 ├── state/
 │   ├── backlog.md                 # roadmap, current phase, scope cuts
 │   └── session-log.md             # per-session summaries
 └── README.md
 ```
+
+`ReplicatedStorage.Remotes` (`RoundStarted`, `RoundEnded`, `RequestPairing`)
+is declared directly in `default.project.json`, not created at runtime.
 
 ## Core mechanics — source of truth, don't drift without asking
 - **Pairing:** friend-invite only for MVP. No stranger-matching ("Quick
