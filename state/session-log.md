@@ -56,12 +56,33 @@
     baking the map permanently into `score_sync.rbxl`.
   - No changes needed to `RoundService`/`ScoreService`/client code — they
     already discover geometry generically via `CollectionService`.
-- **Not yet done**: none of this has actually been run in Studio yet —
-  next session should Play-test to confirm `GeneratedMap` builds
-  correctly, players spawn in the lobby (not falling through the void),
-  and the full Trust round loop (2-client dev bypass: blind overlay,
-  mistake counting on slalom walls, goal detection, results screen) works
-  end to end before checking off the MVP item in `state/backlog.md`.
+- **Reverted the above**: user Play-tested `CourseBuilder`'s output in
+  Studio and it looked bad, deleted the generated map, and is hand-building
+  the lobby + level in Studio's editor instead. Undid the procedural
+  approach:
+  - Removed `CourseBuilder.build()` from `main.server.luau` (it's
+    idempotent, so leaving it wired in would have silently regenerated
+    the same unwanted map on the next Play now that `GeneratedMap` is
+    gone).
+  - Deleted `src/server/CourseBuilder.luau` entirely (user's choice — no
+    reuse planned).
+  - Reverted `default.project.json` back to the original `rojo init`
+    `Baseplate` + plain `Lighting` (removed `ColorShift_Bottom` and
+    `Atmosphere`) — the neon theming was part of the same rejected
+    package, and leaving mood lighting with no matching hand-built
+    geometry would look inconsistent, plus it's Rojo-managed so it'd keep
+    fighting any manual Lighting tweaks made in Studio.
+  - `README.md`/`CLAUDE.md` reverted to the manual Tag Editor
+    instructions (`TrustObstacle`/`TrustGoal`/`TrustSpawn`).
+  - **Decision for future sessions**: level geometry is hand-built in
+    Studio going forward, not code-generated. Don't re-suggest procedural
+    map generation without asking first.
+- **Not yet done**: no level exists yet (user is about to hand-build it in
+  Studio). Once it's built and tagged, next session should Play-test the
+  full Trust round loop (2-client dev bypass: blind overlay, mistake
+  counting, goal detection, results screen) before checking off the MVP
+  item in `state/backlog.md`.
 
-Next: Play-test in Studio, verify the generated map + full Trust round
-loop, then check off the MVP item in `state/backlog.md`.
+Next: user hand-builds the lobby + Trust round level in Studio, tags it,
+then playtest the full loop (2-client local test) and fix whatever
+breaks.
