@@ -36,12 +36,32 @@
     2 local Studio test clients can skip real pairing — `TeleportService`
     doesn't work in local Studio multiplayer testing.
   - Updated `README.md` and `CLAUDE.md` file-structure sections to match.
-- **Not yet done**: no obstacle/goal/spawn geometry exists in
-  `score_sync.rbxl` yet (manual Studio task, tags listed in
-  `state/backlog.md`), and none of this has been run/tested in Studio —
-  next session should tag geometry and verify the Trust round loop via
-  Studio's 2-client test before checking off the MVP item in
-  `state/backlog.md`.
+- Replaced the manual Studio geometry-tagging step with a code-generated
+  map: **`CourseBuilder.luau`** (new) procedurally builds a stylized
+  "modern neon minigame" lobby + slalom Trust round corridor under
+  `Workspace.GeneratedMap` and tags parts with the existing
+  `TrustObstacle`/`TrustGoal`/`TrustSpawn` constants — idempotent (no-ops
+  if `GeneratedMap` already exists), so it's safe to call on every server
+  start and won't clobber manual Studio edits made afterward.
+  - `main.server.luau` now calls `CourseBuilder.build()` first, before
+    `PairingService`/`RoundService`.
+  - `default.project.json`: removed the placeholder `rojo init`
+    `Baseplate` (the generated lobby floor replaces it), added
+    `ColorShift_Bottom` to `Lighting` and a declarative `Atmosphere`
+    instance for the moody theme.
+  - `README.md`/`CLAUDE.md` updated — the old "tag geometry by hand in
+    Studio" step is gone, replaced with "press Play, it builds itself";
+    documented the one-time Command Bar call
+    (`require(game.ServerScriptService.CourseBuilder).build()`) for
+    baking the map permanently into `score_sync.rbxl`.
+  - No changes needed to `RoundService`/`ScoreService`/client code — they
+    already discover geometry generically via `CollectionService`.
+- **Not yet done**: none of this has actually been run in Studio yet —
+  next session should Play-test to confirm `GeneratedMap` builds
+  correctly, players spawn in the lobby (not falling through the void),
+  and the full Trust round loop (2-client dev bypass: blind overlay,
+  mistake counting on slalom walls, goal detection, results screen) works
+  end to end before checking off the MVP item in `state/backlog.md`.
 
-Next: place + tag Trust round geometry in Studio, then playtest the full
-loop (2-client local test) and fix whatever breaks.
+Next: Play-test in Studio, verify the generated map + full Trust round
+loop, then check off the MVP item in `state/backlog.md`.

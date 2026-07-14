@@ -18,9 +18,14 @@ Synced with Roblox Studio using [Rojo](https://rojo.space).
    rojo serve
    ```
 3. In Roblox Studio, install the [Rojo plugin](https://rojo.space/docs/v7/getting-started/installation/#installing-the-studio-plugin), open `score_sync.rbxl`, and click **Connect** in the Rojo plugin panel to sync `src/` into the place.
-4. Tag Trust round level geometry in Studio with the Tag Editor: obstacle
-   parts → `TrustObstacle`, the end part → `TrustGoal`, two spawn parts →
-   `TrustSpawn` (see `state/backlog.md`).
+4. Press Play — `CourseBuilder.build()` runs automatically on server start
+   and generates the stylized lobby + Trust round course under
+   `Workspace.GeneratedMap` (idempotent, so it only builds once; safe to
+   leave running every session). No manual level-building needed. To bake
+   the generated map permanently into `score_sync.rbxl` (so it's visible
+   and hand-editable in Studio's Edit mode, not just during Play), paste
+   `require(game.ServerScriptService.CourseBuilder).build()` into the
+   Command Bar once, then save.
 5. For local iteration without real friend-pairing: Studio → **Test → Clients and Servers** (2 clients) — a dev-only bypass auto-starts a Trust round once 2 players are present (Studio only, never runs in a published place).
 
 ## File structure
@@ -30,7 +35,8 @@ sync-score/
 ├── default.project.json   # Rojo project file — maps src/ folders to Roblox services, declares RemoteEvents
 ├── src/
 │   ├── server/
-│   │   ├── main.server.luau      # Entry point, bootstraps PairingService + RoundService
+│   │   ├── main.server.luau      # Entry point, bootstraps CourseBuilder + PairingService + RoundService
+│   │   ├── CourseBuilder.luau    # Procedurally builds the stylized lobby + Trust round course
 │   │   ├── PairingService.luau   # Reserves a private server + friend-invite pairing via TeleportService/SocialService
 │   │   ├── RoundService.luau     # Trust round orchestration: roles, timer, obstacle/goal detection, scoring
 │   │   └── ScoreService.luau     # Computes the Sync Score from mistakes + time elapsed

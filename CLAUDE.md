@@ -22,7 +22,8 @@ sync-score/
 ├── default.project.json      # Rojo config: maps folders below to Roblox services + RemoteEvents
 ├── src/
 │   ├── server/                    # -> ServerScriptService
-│   │   ├── main.server.luau       # entry point, bootstraps PairingService + RoundService
+│   │   ├── main.server.luau       # entry point, bootstraps CourseBuilder + PairingService + RoundService
+│   │   ├── CourseBuilder.luau     # procedurally builds the lobby + Trust round course (idempotent)
 │   │   ├── PairingService.luau    # reserve private server + friend-invite pairing
 │   │   ├── RoundService.luau      # Trust round orchestration (roles, timer, scoring)
 │   │   └── ScoreService.luau      # scoring formula + calculation
