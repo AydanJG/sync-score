@@ -123,21 +123,22 @@ local function fireFrom(spawnPoint: Instance)
 	end)
 end
 
-local function startSpawnLoop(spawnPoint: Instance)
+-- One shared loop cycling through the spawn points in order, rather than
+-- an independent timer per spawn point — guarantees only one rock is ever
+-- launched at a time, so two cannons can't overlap.
+if #spawnPoints > 0 then
 	task.spawn(function()
-		task.wait(math.random() * FIRE_INTERVAL_MAX) -- stagger the three spawns
+		local index = 1
 		while true do
+			local spawnPoint = spawnPoints[index]
 			local ok, err = pcall(fireFrom, spawnPoint)
 			if not ok then
 				warn("BoulderHazardService: fireFrom failed for " .. spawnPoint:GetFullName() .. " - " .. tostring(err))
 			end
+			index = (index % #spawnPoints) + 1
 			task.wait(FIRE_INTERVAL_MIN + math.random() * (FIRE_INTERVAL_MAX - FIRE_INTERVAL_MIN))
 		end
 	end)
-end
-
-for _, spawnPoint in spawnPoints do
-	startSpawnLoop(spawnPoint)
 end
 
 return BoulderHazardService
