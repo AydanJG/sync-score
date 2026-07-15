@@ -68,9 +68,12 @@ is declared directly in `default.project.json`, not created at runtime.
 Separate from the Trust round/scoring system — standalone obstacles that
 kill on touch (standard Roblox death/respawn via `Humanoid.Health = 0`,
 no custom respawn logic). First one: **Boulder Cannon**
-(`BoulderHazardService.luau`) — three cannons (`Workspace.BoulderRamp.
-Cannon1/2/3`) each independently fire a cloned `Rock` down the ramp on a
-staggered timer; rocks are cleaned up via a `CollectionService`-tagged
+(`BoulderHazardService.luau`) — three spawn point markers
+(`Workspace.RockSpawn1/2/3`) each independently spawn a clone of
+`ServerStorage.Rock` and launch it down the ramp (hardcoded world `+Z`
+direction — the decorative cannon models' orientation isn't reliable,
+likely no `PrimaryPart` set) on a staggered timer; rocks are cleaned up
+via a `CollectionService`-tagged
 despawn zone (`Config.BOULDER_DESPAWN_TAG`, tag name `"BoulderDespawn"`)
 at the bottom, with a lifetime safety net as backup. This is the pattern
 to follow for future kill-on-touch hazards — don't wire hazard kills

@@ -169,8 +169,31 @@ what breaks.
 - No errors after that fix, but rocks got stuck in the cannon instead of
   launching — classic cause: they were spawning exactly at the cannon's
   own pivot, overlapping its collision geometry, so physics fought the
-  velocity instead of letting it fly. Fixed by adding `SPAWN_OFFSET` (5
-  studs along the cannon's `LookVector`) so rocks spawn clear of the
-  cannon before `AssemblyLinearVelocity` is applied. Not yet confirmed
-  working — next test should confirm rocks actually launch and roll down
-  the ramp.
+  velocity instead of letting it fly. Fixed by adding a spawn offset so
+  rocks spawn clear of the cannon before `AssemblyLinearVelocity` is
+  applied. Still stuck after that — switched both spawn offset and launch
+  velocity to a hardcoded world `+Z` direction instead of trusting the
+  cannon `Model`'s `GetPivot()` orientation (per user's diagnosis; likely
+  cause: these asset-pack Models don't have `PrimaryPart` set, so their
+  pivot doesn't reliably match how they look in Studio). **This worked**
+  — rocks launch — but spawning wasn't clean off the cannon geometry.
+- User's fix: dedicated invisible spawn point markers instead of deriving
+  position from the cannon models at all (matches the existing
+  `TrustSpawn`/`TrustGoal` marker pattern, and was my own recommendation
+  once the LookVector issue showed up). Also manually moved the `Rock`
+  template to `ServerStorage.Rock` directly (previously
+  `BoulderHazardService` reparented it there itself from
+  `BoulderRamp.Rock`).
+  - Rewrote `BoulderHazardService.luau`: spawns/fires from
+    `Workspace.RockSpawn1/2/3` (their own `GetPivot()`, no offset needed
+    since the user places them exactly where wanted) instead of the
+    `Cannon1/2/3` models. Reads `ServerStorage.Rock` directly — no more
+    runtime reparenting. `Workspace.BoulderRamp` and the `Cannon1/2/3`
+    lookups are gone entirely; cannon models are now purely decorative,
+    unreferenced by code. Kept the hardcoded `+Z` launch direction (that
+    part was already confirmed working).
+  - Updated `CLAUDE.md`'s "Environmental hazards" section to match the
+    new structure.
+- **Still not fully confirmed**: this rewrite (spawn-point-based) hasn't
+  been Play-tested yet — next session/test should confirm rocks spawn
+  cleanly from the three `RockSpawn` markers and launch correctly.

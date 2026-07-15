@@ -11,39 +11,25 @@ local BoulderHazardService = {}
 local FIRE_INTERVAL_MIN = 4
 local FIRE_INTERVAL_MAX = 7
 local LAUNCH_SPEED = 45
+local LAUNCH_DIRECTION = Vector3.new(0, 0, 1) -- world +Z, down the ramp
 local ROCK_LIFETIME = 20
-local SPAWN_OFFSET = 5 -- studs in front of the cannon, so the rock doesn't spawn embedded in the cannon's own collision geometry
-local LAUNCH_DIRECTION = Vector3.new(0, 0, 1) -- world +Z, down the ramp — hardcoded rather than cannon LookVector, see fireCannon
-
 local WAIT_TIMEOUT = 10
 
-local ramp = Workspace:WaitForChild("BoulderRamp", WAIT_TIMEOUT)
-if not ramp then
-	warn("BoulderHazardService: Workspace.BoulderRamp not found within "
-		.. WAIT_TIMEOUT .. "s — hazard disabled")
-	return BoulderHazardService
-end
-
-local cannons = {}
-for _, name in { "Cannon1", "Cannon2", "Cannon3" } do
-	local cannon = ramp:WaitForChild(name, WAIT_TIMEOUT)
-	if cannon then
-		table.insert(cannons, cannon)
+local spawnPoints = {}
+for _, name in { "RockSpawn1", "RockSpawn2", "RockSpawn3" } do
+	local spawnPoint = Workspace:WaitForChild(name, WAIT_TIMEOUT)
+	if spawnPoint then
+		table.insert(spawnPoints, spawnPoint)
 	else
-		warn("BoulderHazardService: BoulderRamp." .. name .. " not found — that cannon is disabled")
+		warn("BoulderHazardService: Workspace." .. name .. " not found — that spawn is disabled")
 	end
 end
 
-local rockTemplateSource = ramp:WaitForChild("Rock", WAIT_TIMEOUT)
-if not rockTemplateSource then
-	warn("BoulderHazardService: BoulderRamp.Rock not found within " .. WAIT_TIMEOUT .. "s — hazard disabled")
+local rockTemplate = ServerStorage:WaitForChild("Rock", WAIT_TIMEOUT)
+if not rockTemplate then
+	warn("BoulderHazardService: ServerStorage.Rock not found within " .. WAIT_TIMEOUT .. "s — hazard disabled")
 	return BoulderHazardService
 end
-
--- Reparent the template out of Workspace so it isn't itself a live hazard;
--- :Clone() still works on an instance that isn't parented anywhere.
-local rockTemplate = rockTemplateSource
-rockTemplate.Parent = ServerStorage
 
 -- Rock might be a single BasePart or a multi-part Model (e.g. an imported
 -- mesh asset) — handle both rather than assuming one.
@@ -64,7 +50,7 @@ local function tryKill(hit: BasePart)
 	end
 end
 
-local function fireCannon(cannon: Instance)
+local function fireFrom(spawnPoint: Instance)
 	local rock = rockTemplate:Clone()
 	local primary = primaryPartOf(rock)
 	if not primary then
@@ -73,13 +59,7 @@ local function fireCannon(cannon: Instance)
 		return
 	end
 
-	-- Cannons may be a single Part or a multi-part Model (same as Rock) —
-	-- GetPivot works uniformly on both, unlike .CFrame which only exists
-	-- on BasePart. These asset-pack Models likely don't have PrimaryPart
-	-- set though, so GetPivot's orientation isn't reliable for aiming —
-	-- use a fixed world direction (+Z, down the ramp) instead of LookVector.
-	local cannonPivot = (cannon :: PVInstance):GetPivot()
-	local spawnCFrame = cannonPivot + LAUNCH_DIRECTION * SPAWN_OFFSET
+	local spawnCFrame = (spawnPoint :: PVInstance):GetPivot()
 
 	if rock:IsA("Model") then
 		rock:PivotTo(spawnCFrame)
@@ -127,21 +107,21 @@ local function fireCannon(cannon: Instance)
 	end)
 end
 
-local function startCannonLoop(cannon: Instance)
+local function startSpawnLoop(spawnPoint: Instance)
 	task.spawn(function()
-		task.wait(math.random() * FIRE_INTERVAL_MAX) -- stagger the three cannons
+		task.wait(math.random() * FIRE_INTERVAL_MAX) -- stagger the three spawns
 		while true do
-			local ok, err = pcall(fireCannon, cannon)
+			local ok, err = pcall(fireFrom, spawnPoint)
 			if not ok then
-				warn("BoulderHazardService: fireCannon failed for " .. cannon:GetFullName() .. " - " .. tostring(err))
+				warn("BoulderHazardService: fireFrom failed for " .. spawnPoint:GetFullName() .. " - " .. tostring(err))
 			end
 			task.wait(FIRE_INTERVAL_MIN + math.random() * (FIRE_INTERVAL_MAX - FIRE_INTERVAL_MIN))
 		end
 	end)
 end
 
-for _, cannon in cannons do
-	startCannonLoop(cannon)
+for _, spawnPoint in spawnPoints do
+	startSpawnLoop(spawnPoint)
 end
 
 return BoulderHazardService
