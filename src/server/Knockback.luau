@@ -1,3 +1,5 @@
+local RunService = game:GetService("RunService")
+
 local Knockback = {}
 
 -- Roblox's Humanoid controller actively resists external velocity every
@@ -24,9 +26,21 @@ function Knockback.apply(hit: BasePart, sourcePosition: Vector3, force: number, 
 		awayDirection = Vector3.new(math.random(-10, 10), 0, math.random(-10, 10))
 	end
 	awayDirection = awayDirection.Unit
+	local velocity = awayDirection * force + Vector3.new(0, upward, 0)
 
+	-- ChangeState(Physics) forces the Humanoid to relinquish movement
+	-- control immediately, rather than just requesting PlatformStand and
+	-- hoping it takes — and waiting one physics step before applying the
+	-- velocity matters: setting it on the same frame as the state change
+	-- can get silently overwritten while the Humanoid controller is still
+	-- mid-transition, which is why this can look like "sitting there"
+	-- instead of actually launching.
 	humanoid.PlatformStand = true
-	rootPart.AssemblyLinearVelocity = awayDirection * force + Vector3.new(0, upward, 0)
+	humanoid:ChangeState(Enum.HumanoidStateType.Physics)
+	RunService.Heartbeat:Wait()
+
+	rootPart.AssemblyLinearVelocity = velocity
+	rootPart:ApplyImpulse(velocity * rootPart.AssemblyMass * 0.5)
 
 	task.delay(duration, function()
 		if humanoid.Parent then
