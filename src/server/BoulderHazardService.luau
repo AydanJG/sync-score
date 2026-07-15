@@ -17,10 +17,26 @@ local SPAWN_OFFSET = 5 -- studs in front of the spawn marker, along LAUNCH_DIREC
 local ROCK_LIFETIME = 20
 local WAIT_TIMEOUT = 10
 
+-- A spawn marker that isn't Anchored will fall/drift under gravity, and
+-- since its position is read live each time it fires, that silently
+-- breaks spawn positioning without ever erroring. Warn loudly instead.
+local function warnIfUnanchored(name: string, instance: Instance)
+	if instance:IsA("BasePart") and not instance.Anchored then
+		warn("BoulderHazardService: Workspace." .. name .. " is not Anchored — it will fall/drift and break spawn positioning. Set Anchored = true in Studio.")
+	elseif instance:IsA("Model") then
+		for _, descendant in instance:GetDescendants() do
+			if descendant:IsA("BasePart") and not descendant.Anchored then
+				warn("BoulderHazardService: Workspace." .. name .. "." .. descendant.Name .. " is not Anchored — it will fall/drift and break spawn positioning. Set Anchored = true in Studio.")
+			end
+		end
+	end
+end
+
 local spawnPoints = {}
 for _, name in { "RockSpawn1", "RockSpawn2", "RockSpawn3" } do
 	local spawnPoint = Workspace:WaitForChild(name, WAIT_TIMEOUT)
 	if spawnPoint then
+		warnIfUnanchored(name, spawnPoint)
 		table.insert(spawnPoints, spawnPoint)
 	else
 		warn("BoulderHazardService: Workspace." .. name .. " not found — that spawn is disabled")
