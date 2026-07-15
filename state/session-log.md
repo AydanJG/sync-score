@@ -166,3 +166,11 @@ what breaks.
   `:GetPivot()`/`:PivotTo()` over `.CFrame` for any object whose type
   isn't guaranteed, and handle both `BasePart` and `Model` cases whenever
   touching user-placed Studio content.
+- No errors after that fix, but rocks got stuck in the cannon instead of
+  launching — classic cause: they were spawning exactly at the cannon's
+  own pivot, overlapping its collision geometry, so physics fought the
+  velocity instead of letting it fly. Fixed by adding `SPAWN_OFFSET` (5
+  studs along the cannon's `LookVector`) so rocks spawn clear of the
+  cannon before `AssemblyLinearVelocity` is applied. Not yet confirmed
+  working — next test should confirm rocks actually launch and roll down
+  the ramp.
