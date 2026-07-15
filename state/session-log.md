@@ -124,3 +124,19 @@ breaks.
 Next: user tags the boulder despawn part, then Play-test everything built
 so far — Trust round loop AND the Boulder Cannon hazard — and report back
 what breaks.
+
+- User reported cannons not shooting. Couldn't see Studio's Output myself,
+  so hardened `BoulderHazardService.luau` defensively against the two
+  likeliest causes rather than guessing blind:
+  - All `WaitForChild` calls now use a 10s timeout instead of blocking
+    forever if `BoulderRamp`/`Cannon1-3`/`Rock` names don't match exactly
+    — warns and disables gracefully instead of silently hanging.
+  - `Rock` is now handled as either a single `BasePart` or a multi-part
+    `Model` (suspected root cause: if `Rock` is actually a `Model`, e.g.
+    from the imported asset pack, `rock.Anchored = false` would've
+    errored immediately and silently killed that cannon's firing loop
+    forever after one attempt).
+  - Wrapped each `fireCannon` call in `pcall` so a future failure just
+    warns instead of permanently disabling a cannon.
+  - Asked user to check Studio's Output window (F9) to confirm actual
+    root cause rather than assume the fix is right blind.
