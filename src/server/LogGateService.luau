@@ -8,7 +8,11 @@ local LogGateService = {}
 local SWING_ANGLE = -320 -- degrees, full sweep of each half-swing (negative = swing under, not over)
 local SWING_DURATION = 2.5 -- seconds per half-swing
 local PAUSE_DURATION = 0.4 -- seconds paused at each extreme before reversing
-local SWING_AXIS = "Y" -- local axis of GateTop to swing around (up/down)
+-- World-space axis, NOT GateTop's local axis — GateTop is likely a
+-- Model without PrimaryPart set (same asset-pack pattern seen elsewhere
+-- this session), which makes its local orientation unreliable. A fixed
+-- world axis sidesteps that. Try Vector3.new(0, 0, 1) if this is wrong.
+local SWING_AXIS = Vector3.new(1, 0, 0)
 local KNOCKBACK_FORCE = 55
 local KNOCKBACK_UPWARD = 20
 local KNOCKBACK_DURATION = 0.6 -- seconds PlatformStand stays on so physics carries the knockback
@@ -42,25 +46,15 @@ for _, part in logStructure:GetDescendants() do
 end
 
 local originalCFrame = logStructure:GetPivot()
-local pivotCFrame = (gateTop :: PVInstance):GetPivot()
-local inversePivotCFrame = pivotCFrame:Inverse()
-
-local function rotationForAngle(angle: number): CFrame
-	local radians = math.rad(angle)
-	if SWING_AXIS == "X" then
-		return CFrame.Angles(radians, 0, 0)
-	elseif SWING_AXIS == "Y" then
-		return CFrame.Angles(0, radians, 0)
-	else
-		return CFrame.Angles(0, 0, radians)
-	end
-end
+-- Only the pivot's position is used (not its rotation) — rotation happens
+-- around a fixed world axis instead, see SWING_AXIS above.
+local pivotPosition = (gateTop :: PVInstance):GetPivot().Position
 
 -- Rotates LogStructure around the external GateTop pivot point (not its
 -- own center) by `angle` degrees from its original rest orientation.
 local function setAngle(angle: number)
-	local delta = rotationForAngle(angle)
-	logStructure:PivotTo(pivotCFrame * delta * inversePivotCFrame * originalCFrame)
+	local delta = CFrame.fromAxisAngle(SWING_AXIS, math.rad(angle))
+	logStructure:PivotTo(CFrame.new(pivotPosition) * delta * CFrame.new(-pivotPosition) * originalCFrame)
 end
 
 -- Knockback — same PlatformStand technique as BoulderHazardService: the
