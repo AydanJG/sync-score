@@ -65,19 +65,25 @@ is declared directly in `default.project.json`, not created at runtime.
   request that would let purchases affect the score.
 
 ## Environmental hazards
-Separate from the Trust round/scoring system — standalone obstacles that
-kill on touch (standard Roblox death/respawn via `Humanoid.Health = 0`,
-no custom respawn logic). First one: **Boulder Cannon**
-(`BoulderHazardService.luau`) — three spawn point markers
-(`Workspace.RockSpawn1/2/3`) each independently spawn a clone of
-`ServerStorage.Rock` and launch it down the ramp (hardcoded world `+Z`
-direction — the decorative cannon models' orientation isn't reliable,
-likely no `PrimaryPart` set) on a staggered timer; rocks are cleaned up
-via a `CollectionService`-tagged
+Separate from the Trust round/scoring system — standalone obstacles, not
+wired through `RoundService`'s mistake-counting system. First one:
+**Boulder Cannon** (`BoulderHazardService.luau`) — three spawn point
+markers (`Workspace.RockSpawn1/2/3`, must be `Anchored` — a live
+`warnIfUnanchored` check catches this if forgotten) each launch a clone of
+`ServerStorage.Rock` down the ramp (hardcoded world `+Z` direction — the
+decorative cannon models' orientation isn't reliable, likely no
+`PrimaryPart` set), one at a time from a random spawn point, on a
+randomized interval. Rocks are cleaned up via a `CollectionService`-tagged
 despawn zone (`Config.BOULDER_DESPAWN_TAG`, tag name `"BoulderDespawn"`)
-at the bottom, with a lifetime safety net as backup. This is the pattern
-to follow for future kill-on-touch hazards — don't wire hazard kills
-through `RoundService`'s mistake-counting system, they're unrelated.
+at the bottom, with a lifetime safety net as backup.
+
+Touching a rock does **not** kill — it applies a physical knockback
+(briefly sets `Humanoid.PlatformStand = true` so physics actually carries
+the impulse, since the Humanoid controller otherwise fights external
+velocity) that can knock a player off the ramp into the void, where
+Roblox's own fall-death handles it — no custom kill/respawn logic. This
+was a deliberate change from an earlier instant-kill-on-touch version;
+don't reintroduce `Humanoid.Health = 0` here without asking.
 
 ## Conventions
 - Server scripts: `.server.luau`; client: `.client.luau`; shared modules:

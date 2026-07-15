@@ -16,6 +16,9 @@ local LAUNCH_DIRECTION = Vector3.new(0, 0, 1) -- world +Z, down the ramp
 local SPAWN_OFFSET = 5 -- studs in front of the spawn marker, along LAUNCH_DIRECTION
 local ROCK_LIFETIME = 20
 local WAIT_TIMEOUT = 10
+local KNOCKBACK_FORCE = 60
+local KNOCKBACK_UPWARD = 25
+local KNOCKBACK_DURATION = 0.6 -- seconds PlatformStand stays on so physics carries the knockback
 
 -- A spawn marker that isn't Anchored will fall/drift under gravity, and
 -- since its position is read live each time it fires, that silently
@@ -75,12 +78,32 @@ local function isDespawnZone(hit: BasePart): boolean
 	return false
 end
 
-local function tryKill(hit: BasePart)
+-- Roblox's Humanoid controller actively resists external velocity every
+-- frame, so a plain impulse is barely noticeable — briefly disabling the
+-- humanoid's own movement control (PlatformStand) lets physics actually
+-- carry the knockback, then control is handed back after it settles.
+local function knockback(hit: BasePart, impactPosition: Vector3)
 	local character = hit.Parent
 	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-	if humanoid and humanoid.Health > 0 then
-		humanoid.Health = 0
+	local rootPart = character and character:FindFirstChild("HumanoidRootPart") :: BasePart?
+	if not (humanoid and rootPart) then
+		return
 	end
+
+	local awayDirection = rootPart.Position - impactPosition
+	if awayDirection.Magnitude < 0.1 then
+		awayDirection = Vector3.new(math.random(-10, 10), 0, math.random(-10, 10))
+	end
+	awayDirection = awayDirection.Unit
+
+	humanoid.PlatformStand = true
+	rootPart.AssemblyLinearVelocity = awayDirection * KNOCKBACK_FORCE + Vector3.new(0, KNOCKBACK_UPWARD, 0)
+
+	task.delay(KNOCKBACK_DURATION, function()
+		if humanoid.Parent then
+			humanoid.PlatformStand = false
+		end
+	end)
 end
 
 local function fireFrom(spawnPoint: Instance)
@@ -141,7 +164,7 @@ local function fireFrom(spawnPoint: Instance)
 			rock:Destroy()
 			return
 		end
-		tryKill(hit)
+		knockback(hit, primary.Position)
 	end
 
 	for _, part in parts do
