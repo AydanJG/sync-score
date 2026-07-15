@@ -17,9 +17,9 @@ local LAUNCH_DIRECTION = Vector3.new(0, 0, 1) -- world +Z, down the ramp
 local SPAWN_OFFSET = 5 -- studs in front of the spawn marker, along LAUNCH_DIRECTION
 local ROCK_LIFETIME = 20
 local WAIT_TIMEOUT = 10
-local KNOCKBACK_FORCE = 60
-local KNOCKBACK_UPWARD = 25
-local KNOCKBACK_DURATION = 0.6 -- seconds PlatformStand stays on so physics carries the knockback
+local KNOCKBACK_FORCE = 130
+local KNOCKBACK_UPWARD = 55
+local KNOCKBACK_DURATION = 1.0 -- seconds PlatformStand stays on so physics carries the knockback
 
 -- A spawn marker that isn't Anchored will fall/drift under gravity, and
 -- since its position is read live each time it fires, that silently

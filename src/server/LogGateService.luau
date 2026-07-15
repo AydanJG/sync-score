@@ -20,9 +20,9 @@ local PAUSE_DURATION = 0.4 -- seconds paused at each extreme before reversing
 -- this session), which makes its local orientation unreliable. A fixed
 -- world axis sidesteps that. Try Vector3.new(0, 0, 1) if this is wrong.
 local SWING_AXIS = Vector3.new(1, 0, 0)
-local KNOCKBACK_FORCE = 55
-local KNOCKBACK_UPWARD = 20
-local KNOCKBACK_DURATION = 0.6 -- seconds PlatformStand stays on so physics carries the knockback
+local KNOCKBACK_FORCE = 130
+local KNOCKBACK_UPWARD = 55
+local KNOCKBACK_DURATION = 1.0 -- seconds PlatformStand stays on so physics carries the knockback
 local KNOCKBACK_COOLDOWN = 1 -- seconds before the same character can be knocked back again
 local WAIT_TIMEOUT = 10
 
