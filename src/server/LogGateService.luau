@@ -7,10 +7,11 @@ local LogGateService = {}
 -- Hazard tuning (not shared gameplay constants, so kept local to this file)
 -- Swings symmetrically around the rest position (assumed to be hanging
 -- straight down from GateTop, wherever LogStructure was placed in
--- Studio) — +/- HALF_SWING degrees, like a real playground swing, never
--- rising above the post.
-local HALF_SWING = 60 -- degrees each side of rest (120 total arc)
-local SWING_DURATION = 1.6 -- seconds per half-swing
+-- Studio) — +/- HALF_SWING degrees. 160 each side (320 total) swings it
+-- up high on both sides, clearing space under the post for a player to
+-- pass through during the pause at each extreme.
+local HALF_SWING = 160 -- degrees each side of rest (320 total arc)
+local SWING_DURATION = 2.3 -- seconds per half-swing
 local PAUSE_DURATION = 0.4 -- seconds paused at each extreme before reversing
 -- World-space axis, NOT GateTop's local axis — GateTop is likely a
 -- Model without PrimaryPart set (same asset-pack pattern seen elsewhere
