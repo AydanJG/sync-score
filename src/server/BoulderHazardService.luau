@@ -12,6 +12,7 @@ local FIRE_INTERVAL_MIN = 4
 local FIRE_INTERVAL_MAX = 7
 local LAUNCH_SPEED = 45
 local LAUNCH_DIRECTION = Vector3.new(0, 0, 1) -- world +Z, down the ramp
+local SPAWN_OFFSET = 5 -- studs in front of the spawn marker, along LAUNCH_DIRECTION
 local ROCK_LIFETIME = 20
 local WAIT_TIMEOUT = 10
 
@@ -59,7 +60,7 @@ local function fireFrom(spawnPoint: Instance)
 		return
 	end
 
-	local spawnCFrame = (spawnPoint :: PVInstance):GetPivot()
+	local spawnCFrame = (spawnPoint :: PVInstance):GetPivot() + LAUNCH_DIRECTION * SPAWN_OFFSET
 
 	if rock:IsA("Model") then
 		rock:PivotTo(spawnCFrame)
