@@ -62,7 +62,7 @@ local function tryKill(hit: BasePart)
 	end
 end
 
-local function fireCannon(cannon: BasePart)
+local function fireCannon(cannon: Instance)
 	local rock = rockTemplate:Clone()
 	local primary = primaryPartOf(rock)
 	if not primary then
@@ -71,10 +71,15 @@ local function fireCannon(cannon: BasePart)
 		return
 	end
 
+	-- Cannons may be a single Part or a multi-part Model (same as Rock) —
+	-- GetPivot works uniformly on both, unlike .CFrame which only exists
+	-- on BasePart.
+	local cannonPivot = (cannon :: PVInstance):GetPivot()
+
 	if rock:IsA("Model") then
-		rock:PivotTo(cannon.CFrame)
+		rock:PivotTo(cannonPivot)
 	else
-		rock.CFrame = cannon.CFrame
+		rock.CFrame = cannonPivot
 	end
 	rock.Parent = Workspace
 
@@ -86,7 +91,7 @@ local function fireCannon(cannon: BasePart)
 		end
 	end
 
-	primary.AssemblyLinearVelocity = cannon.CFrame.LookVector * LAUNCH_SPEED
+	primary.AssemblyLinearVelocity = cannonPivot.LookVector * LAUNCH_SPEED
 
 	local connections: { RBXScriptConnection } = {}
 	local function onTouched(hit: BasePart)
@@ -117,7 +122,7 @@ local function fireCannon(cannon: BasePart)
 	end)
 end
 
-local function startCannonLoop(cannon: BasePart)
+local function startCannonLoop(cannon: Instance)
 	task.spawn(function()
 		task.wait(math.random() * FIRE_INTERVAL_MAX) -- stagger the three cannons
 		while true do
@@ -131,7 +136,7 @@ local function startCannonLoop(cannon: BasePart)
 end
 
 for _, cannon in cannons do
-	startCannonLoop(cannon :: BasePart)
+	startCannonLoop(cannon)
 end
 
 return BoulderHazardService

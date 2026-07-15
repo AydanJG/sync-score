@@ -140,3 +140,29 @@ what breaks.
     warns instead of permanently disabling a cannon.
   - Asked user to check Studio's Output window (F9) to confirm actual
     root cause rather than assume the fix is right blind.
+- Got real Output from the user, confirming two separate things:
+  - Rojo sync **was** the root cause of "literally nothing happening" —
+    `ReplicatedStorage.Remotes` didn't exist yet (`Infinite yield... on
+    'ReplicatedStorage:WaitForChild("Remotes")'`), which hangs `Remotes.luau`
+    and cascades into every script that requires it. User reconnected the
+    Rojo plugin and it's syncing now (`Server started` printed).
+  - Real bug once sync worked: `CFrame is not a valid member of Model
+    "Workspace.BoulderRamp.CannonX"` — `Cannon1`/`2`/`3` are `Model`s, not
+    `Part`s (same asset-pack pattern as `Rock`, which was already handled
+    defensively — the cannons themselves weren't). Fixed by using
+    `cannon:GetPivot()` instead of `cannon.CFrame` everywhere in
+    `fireCannon` — `GetPivot()` works uniformly on both `BasePart` and
+    `Model`, unlike `.CFrame`.
+  - Also flagged a separate, unrelated issue in the user's own asset-pack
+    content: `Workspace.Lobby.Lobby.Text.SurfaceGui.TextLabel.PoseTexture`
+    /`TextureConfiguration` throws `cannot require using asset ID (lacking
+    capability LoadUnownedAsset)` — a script attempting to `require()` an
+    unowned asset ID, a known backdoor pattern in sketchy free models.
+    Blocked by Roblox's sandbox (didn't execute), but flagged for the user
+    to inspect/remove since it's outside anything in this repo.
+- **Learning for future hazard/geometry code**: don't assume Studio
+  objects referenced by path are a single `Part` — this asset pack makes
+  everything a `Model` (`Rock`, all three `Cannon`s). Prefer
+  `:GetPivot()`/`:PivotTo()` over `.CFrame` for any object whose type
+  isn't guaranteed, and handle both `BasePart` and `Model` cases whenever
+  touching user-placed Studio content.
