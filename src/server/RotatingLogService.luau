@@ -10,9 +10,9 @@ local SPIN_SPEED = 90 -- degrees per second
 -- World-space axis (world up), not the log's own local axis — see
 -- LogGateService for why local axes on asset-pack Models are unreliable.
 local SPIN_AXIS = Vector3.new(0, 1, 0)
-local KNOCKBACK_FORCE = 150
-local KNOCKBACK_UPWARD = 60
-local KNOCKBACK_DURATION = 1.1 -- seconds PlatformStand stays on so physics carries the knockback
+local KNOCKBACK_FORCE = 170
+local KNOCKBACK_UPWARD = 100
+local KNOCKBACK_DURATION = 1.3 -- seconds PlatformStand stays on so physics carries the knockback
 local KNOCKBACK_COOLDOWN = 1 -- seconds before the same character can be knocked back again
 local WAIT_TIMEOUT = 10
 

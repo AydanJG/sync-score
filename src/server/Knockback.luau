@@ -14,7 +14,12 @@ function Knockback.apply(hit: BasePart, sourcePosition: Vector3, force: number, 
 		return
 	end
 
-	local awayDirection = rootPart.Position - sourcePosition
+	-- Flattened to horizontal only — otherwise whatever vertical offset
+	-- happens to exist between the player and the hazard at the moment of
+	-- contact partially cancels the `upward` component below, making the
+	-- launch weaker/less consistent than the tuned numbers suggest.
+	local rawDirection = rootPart.Position - sourcePosition
+	local awayDirection = Vector3.new(rawDirection.X, 0, rawDirection.Z)
 	if awayDirection.Magnitude < 0.1 then
 		awayDirection = Vector3.new(math.random(-10, 10), 0, math.random(-10, 10))
 	end
