@@ -13,6 +13,7 @@ local FIRE_INTERVAL_MAX = 7
 local LAUNCH_SPEED = 45
 local ROCK_LIFETIME = 20
 local SPAWN_OFFSET = 5 -- studs in front of the cannon, so the rock doesn't spawn embedded in the cannon's own collision geometry
+local LAUNCH_DIRECTION = Vector3.new(0, 0, 1) -- world +Z, down the ramp — hardcoded rather than cannon LookVector, see fireCannon
 
 local WAIT_TIMEOUT = 10
 
@@ -74,12 +75,11 @@ local function fireCannon(cannon: Instance)
 
 	-- Cannons may be a single Part or a multi-part Model (same as Rock) —
 	-- GetPivot works uniformly on both, unlike .CFrame which only exists
-	-- on BasePart.
+	-- on BasePart. These asset-pack Models likely don't have PrimaryPart
+	-- set though, so GetPivot's orientation isn't reliable for aiming —
+	-- use a fixed world direction (+Z, down the ramp) instead of LookVector.
 	local cannonPivot = (cannon :: PVInstance):GetPivot()
-	-- Spawn a bit in front of the cannon rather than exactly at its pivot —
-	-- spawning inside the cannon's own collision geometry causes physics
-	-- to fight the velocity and the rock just sits there instead of launching.
-	local spawnCFrame = cannonPivot + cannonPivot.LookVector * SPAWN_OFFSET
+	local spawnCFrame = cannonPivot + LAUNCH_DIRECTION * SPAWN_OFFSET
 
 	if rock:IsA("Model") then
 		rock:PivotTo(spawnCFrame)
@@ -96,7 +96,7 @@ local function fireCannon(cannon: Instance)
 		end
 	end
 
-	primary.AssemblyLinearVelocity = cannonPivot.LookVector * LAUNCH_SPEED
+	primary.AssemblyLinearVelocity = LAUNCH_DIRECTION * LAUNCH_SPEED
 
 	local connections: { RBXScriptConnection } = {}
 	local function onTouched(hit: BasePart)
