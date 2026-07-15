@@ -22,11 +22,14 @@ sync-score/
 ├── default.project.json      # Rojo config: maps folders below to Roblox services + RemoteEvents
 ├── src/
 │   ├── server/                    # -> ServerScriptService
-│   │   ├── main.server.luau         # entry point, bootstraps PairingService + RoundService + BoulderHazardService
+│   │   ├── main.server.luau         # entry point, bootstraps every service below
 │   │   ├── PairingService.luau      # reserve private server + friend-invite pairing
 │   │   ├── RoundService.luau        # Trust round orchestration (roles, timer, scoring)
 │   │   ├── ScoreService.luau        # scoring formula + calculation
-│   │   └── BoulderHazardService.luau # Boulder Cannon hazard (kills on touch, unrelated to Trust round scoring)
+│   │   ├── Knockback.luau           # shared PlatformStand knockback helper (all 3 hazards below)
+│   │   ├── BoulderHazardService.luau # Boulder Cannon hazard, unrelated to Trust round scoring
+│   │   ├── LogGateService.luau      # Log Gate swinging-pendulum hazard
+│   │   └── RotatingLogService.luau  # Rotating Log floor-sweep hazard
 │   ├── client/                    # -> StarterPlayer.StarterPlayerScripts
 │   │   ├── main.client.luau       # entry point, wires round start/end UI
 │   │   └── UI/
@@ -108,11 +111,25 @@ issue as the Boulder Cannon's `Cannon1/2/3` models). If the swing plane
 is ever wrong again, try `Vector3.new(0,0,1)` before suspecting anything
 else.
 
-Touching it uses the same knockback technique as the Boulder Cannon
-(duplicated locally rather than shared — revisit extracting a common
-knockback helper if a third hazard needs it), plus a 1s per-character
-cooldown since continued contact during a swing could otherwise trigger
-repeated `Touched` events.
+Third one: **Rotating Log** (`RotatingLogService.luau`) —
+`Workspace.BlindObby."Rotating Log"` spins continuously around its own
+center (not an external pivot) in a horizontal plane — a floor sweep, not
+a pendulum. Same world-axis-over-local-axis reasoning as Log Gate
+(`Vector3.new(0,1,0)`, world up, via `CFrame.fromAxisAngle`), just
+accumulated every `Heartbeat` frame instead of eased between two extremes
+— no pause, constant `SPIN_SPEED`.
+
+**Shared knockback**: all three hazards knock the player back rather than
+kill (briefly sets `Humanoid.PlatformStand = true` so physics actually
+carries the impulse, since the Humanoid controller otherwise fights
+external velocity — the Boulder Cannon's version of this was a deliberate
+change from an earlier instant-kill-on-touch version, don't reintroduce
+`Humanoid.Health = 0` without asking). Once a third hazard needed the same
+technique it was extracted into `Knockback.luau`
+(`Knockback.apply(hit, sourcePosition, force, upward, duration)`) — all
+three hazard files call into it. Per-character cooldown tracking is each
+hazard's own local responsibility, not shared through the module,
+since different hazards shouldn't suppress each other's knockback.
 
 ## Conventions
 - Server scripts: `.server.luau`; client: `.client.luau`; shared modules:

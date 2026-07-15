@@ -225,3 +225,66 @@ what breaks.
     "roll straight" part was later explicitly re-requested and done above
     ("shoot further apart"/"roll slower" were never actually implemented,
     don't assume they were).
+  - Cannons weren't killing anymore — deliberately replaced instant-kill
+    (`Humanoid.Health = 0`) with physical knockback (briefly
+    `Humanoid.PlatformStand = true` so physics actually carries an
+    impulse, since Humanoid otherwise resists external velocity every
+    frame). Rock can now knock a player off the ramp into the void
+    instead of guaranteeing death on touch.
+  - Fixed rocks not launching/despawning/staying together across several
+    rounds: spawn markers not `Anchored` (added a loud
+    `warnIfUnanchored` check — this was the actual root cause of
+    "nothing spawns/rocks appear randomly"), despawn tag likely applied
+    to a parent `Model` not the touched `Part` (fixed via ancestry-walk
+    in `isDespawnZone`), multi-part `Rock` models not rigidly connected
+    (added `WeldConstraint`s at spawn time), and firing order made
+    random instead of fixed round-robin per request.
+
+- **New hazard: Log Gate** (`Workspace."Log Gate"`, `LogStructure`
+  pivoting around `GateTop`) — user reported an old hand-written Studio
+  script for this had stopped working; I have no visibility into
+  Workspace-local scripts (confirmed nothing about it exists in `src/`),
+  so built `LogGateService.luau` fresh rather than debug-blind. User
+  needs to delete/disable whatever old script was in Studio to avoid it
+  fighting the new one.
+  - Multiple rounds of axis/direction guessing (local X, then Z, then Y
+    — all wrong) before recognizing the real pattern: `GateTop` is
+    almost certainly an asset-pack `Model` without `PrimaryPart` set,
+    making its local orientation unreliable — same root cause as
+    `Cannon1/2/3` earlier. Fixed by rotating around a **hardcoded
+    world-space axis** (`CFrame.fromAxisAngle`, not `GateTop`'s local
+    axes) instead — this is now the go-to fix whenever local-axis
+    rotation on a hand-placed object looks wrong.
+  - Swing arc: started at a full 320° one-sided sweep (matching the
+    original spec literally), user reported it looped "up over the
+    post," so reduced to a small symmetric ±60° swing ("like a real
+    swing" reading) — then user clarified they actually wanted the wide
+    320°-total sweep back (±160° symmetric this time), specifically so
+    it swings up high enough on both sides to leave a gap for the player
+    to pass under during the pause. **Lesson**: the "up over the post"
+    complaint was about broken rotation math (wrong axis), not the arc
+    size — don't reflexively shrink an arc when the user says something
+    "swings wrong," check whether it's actually a math/axis bug first.
+  - Not yet confirmed working after the final wide-swing change.
+
+- **New hazard: Rotating Log** (`Workspace.BlindObby."Rotating Log"`) —
+  spins continuously around its own center in a horizontal plane (floor
+  sweep, not a pendulum). Asked the user whether touching it should count
+  as a Trust round mistake (given the "BlindObby" naming) or knockback
+  like the other hazards — they chose knockback, so it's a standalone
+  hazard like the other two, not wired into `RoundService`.
+  - This was the third hazard needing the PlatformStand knockback
+    technique, crossing the threshold noted when Log Gate was built —
+    extracted `Knockback.luau` (single `Knockback.apply(...)` function)
+    and refactored `BoulderHazardService`/`LogGateService` to use it
+    instead of a third duplicated copy. Cooldown tracking stays local to
+    each hazard file, not shared through the module.
+  - Also removed `BoulderHazardService`'s temporary spawn-position debug
+    print during this pass, since that issue was confirmed fixed several
+    fixes ago and the print was marked for removal once confirmed.
+  - Not yet tested.
+
+Next: user tests Log Gate (wide swing) and Rotating Log in Studio, and
+reports back what breaks. Three environmental hazards now exist
+(`BoulderHazardService`, `LogGateService`, `RotatingLogService`), all
+sharing `Knockback.luau`, all separate from Trust round scoring.

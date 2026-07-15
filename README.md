@@ -24,9 +24,15 @@ Synced with Roblox Studio using [Rojo](https://rojo.space).
    `TrustSpawn` (see `state/backlog.md`).
 5. For local iteration without real friend-pairing: Studio → **Test → Clients and Servers** (2 clients) — a dev-only bypass auto-starts a Trust round once 2 players are present (Studio only, never runs in a published place).
 6. If you've built the Boulder Cannon hazard (`Workspace.BoulderRamp` with
-   `Cannon1`/`Cannon2`/`Cannon3` + a `Rock` template), tag one part at the
-   bottom of the ramp `BoulderDespawn` so rocks get cleaned up once they
-   reach it.
+   decorative `Cannon1`/`Cannon2`/`Cannon3`, `Workspace.RockSpawn1/2/3`
+   marker parts — must be `Anchored` — and a `ServerStorage.Rock`
+   template), tag one part at the bottom of the ramp `BoulderDespawn` so
+   rocks get cleaned up once they reach it. Touching a rock knocks the
+   player back rather than killing them.
+7. Log Gate (`Workspace."Log Gate"`, swings under `GateTop`) and Rotating
+   Log (`Workspace.BlindObby."Rotating Log"`, spins in place) are both
+   fully code-driven — no additional tagging needed, just the objects
+   themselves in place. Both knock the player back on touch.
 
 ## File structure
 
@@ -35,11 +41,14 @@ sync-score/
 ├── default.project.json   # Rojo project file — maps src/ folders to Roblox services, declares RemoteEvents
 ├── src/
 │   ├── server/
-│   │   ├── main.server.luau         # Entry point, bootstraps PairingService + RoundService + BoulderHazardService
+│   │   ├── main.server.luau         # Entry point, bootstraps every service below
 │   │   ├── PairingService.luau      # Reserves a private server + friend-invite pairing via TeleportService/SocialService
 │   │   ├── RoundService.luau        # Trust round orchestration: roles, timer, obstacle/goal detection, scoring
 │   │   ├── ScoreService.luau        # Computes the Sync Score from mistakes + time elapsed
-│   │   └── BoulderHazardService.luau # Boulder Cannon hazard: fires rocks down BoulderRamp, kills on touch
+│   │   ├── Knockback.luau           # Shared knockback helper used by all 3 hazards below
+│   │   ├── BoulderHazardService.luau # Boulder Cannon: fires rocks down BoulderRamp, knocks players back
+│   │   ├── LogGateService.luau      # Log Gate: swinging pendulum obstacle, knocks players back
+│   │   └── RotatingLogService.luau  # Rotating Log: spinning floor sweep, knocks players back
 │   ├── client/
 │   │   ├── main.client.luau      # Entry point, wires up round start/end UI
 │   │   └── UI/
