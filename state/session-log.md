@@ -197,3 +197,31 @@ what breaks.
 - **Still not fully confirmed**: this rewrite (spawn-point-based) hasn't
   been Play-tested yet — next session/test should confirm rocks spawn
   cleanly from the three `RockSpawn` markers and launch correctly.
+- Follow-up round of small fixes from continued playtesting:
+  - Rocks weren't spawning far enough in front of the `RockSpawn` markers
+    — reintroduced `SPAWN_OFFSET` (5 studs along `LAUNCH_DIRECTION`),
+    this time applied to the spawn markers instead of the old cannons.
+  - Rocks weren't despawning at the tagged platform — same root cause as
+    the earlier `Model`-vs-`Part` issues: the despawn tag was almost
+    certainly applied to a parent `Model`, but `Touched` only fires with
+    the specific child `Part` actually hit, so the exact-instance
+    `HasTag` check missed it. Added `isDespawnZone()`, which walks up the
+    ancestry checking every level instead of just the touched part.
+  - Two cannons could fire close enough together that rocks overlapped —
+    replaced the 3 independent per-spawn timers with one shared loop that
+    cycles `RockSpawn1 → 2 → 3 → repeat`, guaranteeing only one rock is
+    ever launched at a time. Side effect: each individual spawn point now
+    fires roughly 3x less often than before (shares one cadence across
+    all three) — flag if the pacing feels off.
+  - Rocks didn't roll straight down the ramp — inherent to physics-based
+    rolling on an irregular mesh shape (contact with the ramp imparts
+    sideways drift/spin), not fixable via launch velocity alone. Added a
+    `RunService.Heartbeat` connection per rock that zeroes any sideways
+    (X-axis) velocity every frame, leaving vertical (gravity/slope) and
+    forward motion untouched. Tracked in the same connection-cleanup
+    table as the Touched handlers.
+  - User asked for "roll slower, shoot further apart, roll straight only"
+    at one point, then said nevermind before I acted on it — only the
+    "roll straight" part was later explicitly re-requested and done above
+    ("shoot further apart"/"roll slower" were never actually implemented,
+    don't assume they were).
