@@ -85,6 +85,19 @@ Roblox's own fall-death handles it — no custom kill/respawn logic. This
 was a deliberate change from an earlier instant-kill-on-touch version;
 don't reintroduce `Humanoid.Health = 0` here without asking.
 
+Second one: **Log Gate** (`LogGateService.luau`) — `Workspace."Log Gate"`
+(`LogStructure` model containing the log/rope parts, pivoting around a
+separate `GateTop` part/model). Kinematic, not physics-driven: all parts
+under `LogStructure` are forced `Anchored`, and a script manually rotates
+the whole model around `GateTop`'s pivot point every frame (the "rotate a
+model around an external point" CFrame formula — `pivotCFrame * delta *
+pivotCFrame:Inverse() * originalCFrame`), eased via
+`TweenService:GetValue(...)` for a natural pendulum decelerate/pause feel,
+alternating between 0° and a configurable swing angle. Touching it uses
+the same knockback technique as the Boulder Cannon (duplicated locally
+rather than shared — revisit extracting a common knockback helper if a
+third hazard needs it).
+
 ## Conventions
 - Server scripts: `.server.luau`; client: `.client.luau`; shared modules:
   plain `.luau`
