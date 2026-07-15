@@ -1,5 +1,6 @@
 local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 local ServerStorage = game:GetService("ServerStorage")
 local Workspace = game:GetService("Workspace")
 
@@ -111,6 +112,20 @@ local function fireFrom(spawnPoint: Instance)
 			table.insert(connections, part.Touched:Connect(onTouched))
 		end
 	end
+
+	-- Once the rock is actually rolling on the ramp, contact with an
+	-- irregular mesh shape imparts sideways drift/spin that a one-time
+	-- launch velocity can't prevent — cancel any sideways (X) velocity
+	-- every frame so it only ever travels straight down the ramp (Z).
+	table.insert(
+		connections,
+		RunService.Heartbeat:Connect(function()
+			local velocity = primary.AssemblyLinearVelocity
+			if velocity.X ~= 0 then
+				primary.AssemblyLinearVelocity = Vector3.new(0, velocity.Y, velocity.Z)
+			end
+		end)
+	)
 
 	-- Safety net in case a rock gets stuck and never reaches the despawn tag
 	task.delay(ROCK_LIFETIME, function()
