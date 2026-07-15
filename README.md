@@ -23,6 +23,10 @@ Synced with Roblox Studio using [Rojo](https://rojo.space).
    `TrustObstacle`, the end part → `TrustGoal`, two spawn parts →
    `TrustSpawn` (see `state/backlog.md`).
 5. For local iteration without real friend-pairing: Studio → **Test → Clients and Servers** (2 clients) — a dev-only bypass auto-starts a Trust round once 2 players are present (Studio only, never runs in a published place).
+6. If you've built the Boulder Cannon hazard (`Workspace.BoulderRamp` with
+   `Cannon1`/`Cannon2`/`Cannon3` + a `Rock` template), tag one part at the
+   bottom of the ramp `BoulderDespawn` so rocks get cleaned up once they
+   reach it.
 
 ## File structure
 
@@ -31,10 +35,11 @@ sync-score/
 ├── default.project.json   # Rojo project file — maps src/ folders to Roblox services, declares RemoteEvents
 ├── src/
 │   ├── server/
-│   │   ├── main.server.luau      # Entry point, bootstraps PairingService + RoundService
-│   │   ├── PairingService.luau   # Reserves a private server + friend-invite pairing via TeleportService/SocialService
-│   │   ├── RoundService.luau     # Trust round orchestration: roles, timer, obstacle/goal detection, scoring
-│   │   └── ScoreService.luau     # Computes the Sync Score from mistakes + time elapsed
+│   │   ├── main.server.luau         # Entry point, bootstraps PairingService + RoundService + BoulderHazardService
+│   │   ├── PairingService.luau      # Reserves a private server + friend-invite pairing via TeleportService/SocialService
+│   │   ├── RoundService.luau        # Trust round orchestration: roles, timer, obstacle/goal detection, scoring
+│   │   ├── ScoreService.luau        # Computes the Sync Score from mistakes + time elapsed
+│   │   └── BoulderHazardService.luau # Boulder Cannon hazard: fires rocks down BoulderRamp, kills on touch
 │   ├── client/
 │   │   ├── main.client.luau      # Entry point, wires up round start/end UI
 │   │   └── UI/

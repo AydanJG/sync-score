@@ -22,10 +22,11 @@ sync-score/
 ├── default.project.json      # Rojo config: maps folders below to Roblox services + RemoteEvents
 ├── src/
 │   ├── server/                    # -> ServerScriptService
-│   │   ├── main.server.luau       # entry point, bootstraps PairingService + RoundService
-│   │   ├── PairingService.luau    # reserve private server + friend-invite pairing
-│   │   ├── RoundService.luau      # Trust round orchestration (roles, timer, scoring)
-│   │   └── ScoreService.luau      # scoring formula + calculation
+│   │   ├── main.server.luau         # entry point, bootstraps PairingService + RoundService + BoulderHazardService
+│   │   ├── PairingService.luau      # reserve private server + friend-invite pairing
+│   │   ├── RoundService.luau        # Trust round orchestration (roles, timer, scoring)
+│   │   ├── ScoreService.luau        # scoring formula + calculation
+│   │   └── BoulderHazardService.luau # Boulder Cannon hazard (kills on touch, unrelated to Trust round scoring)
 │   ├── client/                    # -> StarterPlayer.StarterPlayerScripts
 │   │   ├── main.client.luau       # entry point, wires round start/end UI
 │   │   └── UI/
@@ -62,6 +63,18 @@ is declared directly in `default.project.json`, not created at runtime.
 - **No pay-to-win.** Score must reflect actual coordination — monetization
   is cosmetic-only (avatar items, score-card themes). Flag any feature
   request that would let purchases affect the score.
+
+## Environmental hazards
+Separate from the Trust round/scoring system — standalone obstacles that
+kill on touch (standard Roblox death/respawn via `Humanoid.Health = 0`,
+no custom respawn logic). First one: **Boulder Cannon**
+(`BoulderHazardService.luau`) — three cannons (`Workspace.BoulderRamp.
+Cannon1/2/3`) each independently fire a cloned `Rock` down the ramp on a
+staggered timer; rocks are cleaned up via a `CollectionService`-tagged
+despawn zone (`Config.BOULDER_DESPAWN_TAG`, tag name `"BoulderDespawn"`)
+at the bottom, with a lifetime safety net as backup. This is the pattern
+to follow for future kill-on-touch hazards — don't wire hazard kills
+through `RoundService`'s mistake-counting system, they're unrelated.
 
 ## Conventions
 - Server scripts: `.server.luau`; client: `.client.luau`; shared modules:

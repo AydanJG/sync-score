@@ -13,6 +13,9 @@ local Config = {
 	OBSTACLE_TAG = "TrustObstacle",
 	GOAL_TAG = "TrustGoal",
 	SPAWN_TAG = "TrustSpawn",
+
+	-- CollectionService tag for the Boulder Cannon hazard's despawn zone
+	BOULDER_DESPAWN_TAG = "BoulderDespawn",
 }
 
 return Config

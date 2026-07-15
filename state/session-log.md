@@ -86,3 +86,41 @@
 Next: user hand-builds the lobby + Trust round level in Studio, tags it,
 then playtest the full loop (2-client local test) and fix whatever
 breaks.
+
+- User hand-built a lobby and a "Log Gate" structure, and a "Boulder
+  Cannon" hazard (`Workspace.BoulderRamp` with `Cannon1`/`Cannon2`/
+  `Cannon3` + a `Rock` template). Various small Studio-side asset
+  questions along the way (wood color, rope texture tiling, asset pack
+  storage via `ServerStorage`, MeshPart `TextureID` vs `Decal`/`Texture`,
+  free-cam navigation) — no code changes from those, pure Studio guidance.
+- Implemented the Boulder Cannon hazard (plan approved first — this is a
+  new mechanic, not covered by the MVP plan):
+  - `Config.luau`: added `BOULDER_DESPAWN_TAG = "BoulderDespawn"`.
+  - `BoulderHazardService.luau` (new): each of the 3 cannons fires on its
+    own independently staggered/randomized timer, cloning the `Rock`
+    template, launching it via `AssemblyLinearVelocity` along the
+    cannon's `LookVector`, letting ramp geometry + gravity carry it down.
+    Kills any player character it touches (`Humanoid.Health = 0` — first
+    real "kill" mechanic in the codebase, previously only
+    `RoundService`'s mistake-counting existed). Despawns via the
+    `BoulderDespawn` tag on a part the user places at the ramp's bottom,
+    plus a ~20s lifetime safety net. Rock template is reparented to
+    `ServerStorage` so it isn't itself a live hazard sitting in
+    `Workspace`.
+  - `main.server.luau`: requires `BoulderHazardService` **last** (after
+    `PairingService`/`RoundService`) — it does a blocking `WaitForChild`
+    on `Workspace.BoulderRamp` at require-time, so ordering it last means
+    a missing/renamed ramp can't block the core Trust round system from
+    initializing.
+  - `README.md`/`CLAUDE.md` updated — new "Environmental hazards" section
+    in `CLAUDE.md` documents this as the pattern for future kill-on-touch
+    hazards (explicitly: don't wire hazard kills through `RoundService`'s
+    mistake system, they're unrelated).
+  - Manual step still needed from user: tag one part at the ramp's bottom
+    `BoulderDespawn`.
+- **Not yet done**: none of this (Trust round geometry+tags, or the
+  Boulder Cannon hazard) has been Play-tested yet.
+
+Next: user tags the boulder despawn part, then Play-test everything built
+so far — Trust round loop AND the Boulder Cannon hazard — and report back
+what breaks.
