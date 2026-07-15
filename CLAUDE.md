@@ -94,9 +94,10 @@ the whole model around `GateTop`'s pivot **position** every frame (the
 `CFrame.new(pivotPosition) * delta * CFrame.new(-pivotPosition) *
 originalCFrame`), eased via `TweenService:GetValue(...)` for a natural
 pendulum decelerate/pause feel. Swings symmetrically ±`HALF_SWING`
-degrees (default 60°, so 120° total) around the rest position captured at
-server start — like a real playground swing, staying under the post, not
-looping over the top.
+degrees (default 160°, so 320° total) around the rest position captured
+at server start — wide enough to swing up high on both sides, clearing
+space under the post for a player to pass through during the pause at
+each extreme.
 
 Rotation uses a **hardcoded world-space axis** (`SWING_AXIS =
 Vector3.new(1,0,0)`, via `CFrame.fromAxisAngle`), not `GateTop`'s own
