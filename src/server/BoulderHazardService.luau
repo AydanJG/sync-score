@@ -90,6 +90,16 @@ local function fireFrom(spawnPoint: Instance)
 		if part:IsA("BasePart") then
 			part.Anchored = false
 			part.CanCollide = true
+			-- If the model's parts aren't already rigidly connected, weld
+			-- every part to primary so the whole rock always moves as one
+			-- assembly — otherwise unanchoring + setting velocity on just
+			-- primary can leave other parts behind to fall independently.
+			if part ~= primary then
+				local weld = Instance.new("WeldConstraint")
+				weld.Part0 = primary
+				weld.Part1 = part
+				weld.Parent = primary
+			end
 		end
 	end
 
