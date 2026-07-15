@@ -5,7 +5,7 @@ local Workspace = game:GetService("Workspace")
 local LogGateService = {}
 
 -- Hazard tuning (not shared gameplay constants, so kept local to this file)
-local SWING_ANGLE = 320 -- degrees, full sweep of each half-swing
+local SWING_ANGLE = -320 -- degrees, full sweep of each half-swing (negative = swing under, not over)
 local SWING_DURATION = 2.5 -- seconds per half-swing
 local PAUSE_DURATION = 0.4 -- seconds paused at each extreme before reversing
 local SWING_AXIS = "Y" -- local axis of GateTop to swing around (up/down)
