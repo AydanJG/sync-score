@@ -43,6 +43,21 @@ local function primaryPartOf(instance: Instance): BasePart?
 	return nil
 end
 
+-- Touched always fires with the specific Part that was hit, but the
+-- despawn tag might be applied to a parent Model (e.g. if the platform
+-- is a multi-part asset-pack Model and the whole Model got tagged) —
+-- walk up the ancestry rather than checking only the exact touched part.
+local function isDespawnZone(hit: BasePart): boolean
+	local instance: Instance? = hit
+	while instance do
+		if CollectionService:HasTag(instance, Config.BOULDER_DESPAWN_TAG) then
+			return true
+		end
+		instance = instance.Parent
+	end
+	return false
+end
+
 local function tryKill(hit: BasePart)
 	local character = hit.Parent
 	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
@@ -81,7 +96,7 @@ local function fireFrom(spawnPoint: Instance)
 
 	local connections: { RBXScriptConnection } = {}
 	local function onTouched(hit: BasePart)
-		if CollectionService:HasTag(hit, Config.BOULDER_DESPAWN_TAG) then
+		if isDespawnZone(hit) then
 			for _, connection in connections do
 				connection:Disconnect()
 			end
