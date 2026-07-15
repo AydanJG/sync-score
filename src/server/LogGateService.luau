@@ -2,6 +2,8 @@ local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 
+local Knockback = require(script.Parent.Knockback)
+
 local LogGateService = {}
 
 -- Hazard tuning (not shared gameplay constants, so kept local to this file)
@@ -62,14 +64,13 @@ local function setAngle(angle: number)
 	logStructure:PivotTo(CFrame.new(pivotPosition) * delta * CFrame.new(-pivotPosition) * originalCFrame)
 end
 
--- Knockback — same PlatformStand technique as BoulderHazardService: the
--- Humanoid controller otherwise resists external velocity every frame.
+-- Per-character cooldown since continued contact during a swing could
+-- otherwise trigger repeated Touched events — this state is local to
+-- this hazard, not shared via the Knockback module.
 local lastKnockbackAt = {}
 local function knockback(hit: BasePart)
 	local character = hit.Parent
-	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-	local rootPart = character and character:FindFirstChild("HumanoidRootPart") :: BasePart?
-	if not (humanoid and rootPart and character) then
+	if not character then
 		return
 	end
 
@@ -79,21 +80,7 @@ local function knockback(hit: BasePart)
 	end
 	lastKnockbackAt[character] = now
 
-	local logPosition = logStructure:GetPivot().Position
-	local awayDirection = rootPart.Position - logPosition
-	if awayDirection.Magnitude < 0.1 then
-		awayDirection = Vector3.new(math.random(-10, 10), 0, math.random(-10, 10))
-	end
-	awayDirection = awayDirection.Unit
-
-	humanoid.PlatformStand = true
-	rootPart.AssemblyLinearVelocity = awayDirection * KNOCKBACK_FORCE + Vector3.new(0, KNOCKBACK_UPWARD, 0)
-
-	task.delay(KNOCKBACK_DURATION, function()
-		if humanoid.Parent then
-			humanoid.PlatformStand = false
-		end
-	end)
+	Knockback.apply(hit, logStructure:GetPivot().Position, KNOCKBACK_FORCE, KNOCKBACK_UPWARD, KNOCKBACK_DURATION)
 end
 
 for _, part in logStructure:GetDescendants() do

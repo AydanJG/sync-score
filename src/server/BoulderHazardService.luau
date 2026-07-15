@@ -5,6 +5,7 @@ local ServerStorage = game:GetService("ServerStorage")
 local Workspace = game:GetService("Workspace")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local Knockback = require(script.Parent.Knockback)
 
 local BoulderHazardService = {}
 
@@ -78,32 +79,8 @@ local function isDespawnZone(hit: BasePart): boolean
 	return false
 end
 
--- Roblox's Humanoid controller actively resists external velocity every
--- frame, so a plain impulse is barely noticeable — briefly disabling the
--- humanoid's own movement control (PlatformStand) lets physics actually
--- carry the knockback, then control is handed back after it settles.
 local function knockback(hit: BasePart, impactPosition: Vector3)
-	local character = hit.Parent
-	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-	local rootPart = character and character:FindFirstChild("HumanoidRootPart") :: BasePart?
-	if not (humanoid and rootPart) then
-		return
-	end
-
-	local awayDirection = rootPart.Position - impactPosition
-	if awayDirection.Magnitude < 0.1 then
-		awayDirection = Vector3.new(math.random(-10, 10), 0, math.random(-10, 10))
-	end
-	awayDirection = awayDirection.Unit
-
-	humanoid.PlatformStand = true
-	rootPart.AssemblyLinearVelocity = awayDirection * KNOCKBACK_FORCE + Vector3.new(0, KNOCKBACK_UPWARD, 0)
-
-	task.delay(KNOCKBACK_DURATION, function()
-		if humanoid.Parent then
-			humanoid.PlatformStand = false
-		end
-	end)
+	Knockback.apply(hit, impactPosition, KNOCKBACK_FORCE, KNOCKBACK_UPWARD, KNOCKBACK_DURATION)
 end
 
 local function fireFrom(spawnPoint: Instance)
@@ -205,16 +182,6 @@ if #spawnPoints > 0 then
 	task.spawn(function()
 		while true do
 			local spawnPoint = spawnPoints[math.random(1, #spawnPoints)]
-			-- TEMPORARY debug print — remove once the spawn-location issue
-			-- is confirmed/fixed. Shows exactly which marker fires and
-			-- where, every cycle.
-			local pivot = (spawnPoint :: PVInstance):GetPivot()
-			print(
-				"BoulderHazardService: firing from "
-					.. spawnPoint.Name
-					.. " at "
-					.. tostring(pivot.Position)
-			)
 			local ok, err = pcall(fireFrom, spawnPoint)
 			if not ok then
 				warn("BoulderHazardService: fireFrom failed for " .. spawnPoint:GetFullName() .. " - " .. tostring(err))
