@@ -105,6 +105,17 @@ local function fireFrom(spawnPoint: Instance)
 
 	primary.AssemblyLinearVelocity = LAUNCH_DIRECTION * LAUNCH_SPEED
 
+	-- Launch sound — parented to the rock itself, so it plays positionally
+	-- from the launch point and gets cleaned up automatically whenever the
+	-- rock is destroyed (despawn zone or lifetime safety net), no separate
+	-- cleanup needed.
+	local launchSound = Instance.new("Sound")
+	launchSound.Name = "LaunchSound"
+	launchSound.SoundId = "rbxassetid://125205557479599"
+	launchSound.Volume = 0.4
+	launchSound.Parent = primary
+	launchSound:Play()
+
 	local connections: { RBXScriptConnection } = {}
 	local function onTouched(hit: BasePart)
 		if isDespawnZone(hit) then
@@ -156,6 +167,16 @@ if #spawnPoints > 0 then
 		local index = 1
 		while true do
 			local spawnPoint = spawnPoints[index]
+			-- TEMPORARY debug print — remove once the spawn-location issue
+			-- is confirmed/fixed. Shows exactly which marker fires and
+			-- where, every cycle.
+			local pivot = (spawnPoint :: PVInstance):GetPivot()
+			print(
+				"BoulderHazardService: firing from "
+					.. spawnPoint.Name
+					.. " at "
+					.. tostring(pivot.Position)
+			)
 			local ok, err = pcall(fireFrom, spawnPoint)
 			if not ok then
 				warn("BoulderHazardService: fireFrom failed for " .. spawnPoint:GetFullName() .. " - " .. tostring(err))
