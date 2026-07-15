@@ -288,3 +288,42 @@ Next: user tests Log Gate (wide swing) and Rotating Log in Studio, and
 reports back what breaks. Three environmental hazards now exist
 (`BoulderHazardService`, `LogGateService`, `RotatingLogService`), all
 sharing `Knockback.luau`, all separate from Trust round scoring.
+
+- Knockback tuning pass, confirmed working by end of session:
+  - User reported all three hazards' knockback felt like ragdolling, not
+    a dramatic launch — bumped force/upward/duration significantly
+    across all three (roughly: Boulder Cannon and Log Gate to
+    FORCE=130/UPWARD=55/DURATION=1.0s, Rotating Log to
+    FORCE=150/UPWARD=60/DURATION=1.1s, since it's a floor sweep and
+    wanted to launch further specifically).
+  - Log Gate/Rotating Log still felt weak after that — flattened the
+    push direction in `Knockback.luau` to horizontal-only (X/Z) before
+    scaling by force, with `upward` applied as a fully separate vertical
+    component, since a vertical offset between player and hazard at
+    contact was partially canceling the upward boost. Pushed both log
+    hazards further still (Log Gate UPWARD 95, Rotating Log UPWARD 100).
+  - Still "just sits" instead of launching — this turned out to be a
+    real bug, not a tuning issue: setting `Humanoid.PlatformStand = true`
+    and overwriting `AssemblyLinearVelocity` on the *same frame* can get
+    silently eaten while the Humanoid controller is still mid-transition
+    out of its normal movement state. Fixed in `Knockback.luau` by
+    calling `humanoid:ChangeState(Enum.HumanoidStateType.Physics)`
+    alongside `PlatformStand`, waiting one `RunService.Heartbeat` before
+    applying velocity, and adding an extra `ApplyImpulse` (scaled by
+    `AssemblyMass`) on top of the direct velocity set. **User confirmed
+    this fixed it** ("Much better").
+  - **Lesson for future knockback/launch work in this codebase**: if a
+    scripted `AssemblyLinearVelocity` launch looks like it's not
+    applying at all (character stays put / just ragdolls in place
+    rather than moving), suspect the PlatformStand-same-frame timing bug
+    first — the fix (`ChangeState(Physics)` + wait one Heartbeat before
+    setting velocity) is already in `Knockback.luau`, reuse it rather
+    than re-debugging from scratch.
+
+Session end (2026-07-15, spilled over from 2026-07-14): all three
+environmental hazards (Boulder Cannon, Log Gate, Rotating Log) are built,
+debugged, and confirmed working by the user, including knockback feel.
+MVP Trust round itself (geometry, tags, full 2-client playtest) still
+hasn't been confirmed end-to-end — that's still the actual `state/backlog.md`
+MVP item, unchecked. Next session should either finish that verification,
+or continue on whatever the user prioritizes (confirm before assuming).
