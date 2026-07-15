@@ -5,8 +5,12 @@ local Workspace = game:GetService("Workspace")
 local LogGateService = {}
 
 -- Hazard tuning (not shared gameplay constants, so kept local to this file)
-local SWING_ANGLE = -320 -- degrees, full sweep of each half-swing (negative = swing under, not over)
-local SWING_DURATION = 2.5 -- seconds per half-swing
+-- Swings symmetrically around the rest position (assumed to be hanging
+-- straight down from GateTop, wherever LogStructure was placed in
+-- Studio) — +/- HALF_SWING degrees, like a real playground swing, never
+-- rising above the post.
+local HALF_SWING = 60 -- degrees each side of rest (120 total arc)
+local SWING_DURATION = 1.6 -- seconds per half-swing
 local PAUSE_DURATION = 0.4 -- seconds paused at each extreme before reversing
 -- World-space axis, NOT GateTop's local axis — GateTop is likely a
 -- Model without PrimaryPart set (same asset-pack pattern seen elsewhere
@@ -97,12 +101,12 @@ for _, part in logStructure:GetDescendants() do
 	end
 end
 
--- Swing loop: 0 -> SWING_ANGLE -> 0 -> SWING_ANGLE -> ..., eased like a
--- pendulum (fast through the middle, slow approaching each extreme) with
--- a brief explicit pause at each end before reversing.
+-- Swing loop: -HALF_SWING -> +HALF_SWING -> -HALF_SWING -> ..., eased like
+-- a pendulum (fast through the middle, slow approaching each extreme)
+-- with a brief explicit pause at each end before reversing.
 task.spawn(function()
-	local currentAngle = 0
-	local targetAngle = SWING_ANGLE
+	local currentAngle = -HALF_SWING
+	local targetAngle = HALF_SWING
 	while true do
 		local startAngle = currentAngle
 		local startTime = os.clock()
@@ -116,7 +120,7 @@ task.spawn(function()
 			RunService.Heartbeat:Wait()
 		end
 		currentAngle = targetAngle
-		targetAngle = (targetAngle == SWING_ANGLE) and 0 or SWING_ANGLE
+		targetAngle = -targetAngle
 		task.wait(PAUSE_DURATION)
 	end
 end)
