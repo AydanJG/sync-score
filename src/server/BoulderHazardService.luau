@@ -175,14 +175,13 @@ local function fireFrom(spawnPoint: Instance)
 	end)
 end
 
--- One shared loop cycling through the spawn points in order, rather than
--- an independent timer per spawn point — guarantees only one rock is ever
+-- One shared loop picking a random spawn point each time, rather than an
+-- independent timer per spawn point — guarantees only one rock is ever
 -- launched at a time, so two cannons can't overlap.
 if #spawnPoints > 0 then
 	task.spawn(function()
-		local index = 1
 		while true do
-			local spawnPoint = spawnPoints[index]
+			local spawnPoint = spawnPoints[math.random(1, #spawnPoints)]
 			-- TEMPORARY debug print — remove once the spawn-location issue
 			-- is confirmed/fixed. Shows exactly which marker fires and
 			-- where, every cycle.
@@ -197,7 +196,6 @@ if #spawnPoints > 0 then
 			if not ok then
 				warn("BoulderHazardService: fireFrom failed for " .. spawnPoint:GetFullName() .. " - " .. tostring(err))
 			end
-			index = (index % #spawnPoints) + 1
 			task.wait(FIRE_INTERVAL_MIN + math.random() * (FIRE_INTERVAL_MAX - FIRE_INTERVAL_MIN))
 		end
 	end)
