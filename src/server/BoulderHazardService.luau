@@ -36,14 +36,20 @@ local function warnIfUnanchored(name: string, instance: Instance)
 	end
 end
 
+local blindObby = Workspace:WaitForChild("BlindObby", WAIT_TIMEOUT)
+if not blindObby then
+	warn("BoulderHazardService: Workspace.BlindObby not found within " .. WAIT_TIMEOUT .. "s — hazard disabled")
+	return BoulderHazardService
+end
+
 local spawnPoints = {}
 for _, name in { "RockSpawn1", "RockSpawn2", "RockSpawn3" } do
-	local spawnPoint = Workspace:WaitForChild(name, WAIT_TIMEOUT)
+	local spawnPoint = blindObby:WaitForChild(name, WAIT_TIMEOUT)
 	if spawnPoint then
 		warnIfUnanchored(name, spawnPoint)
 		table.insert(spawnPoints, spawnPoint)
 	else
-		warn("BoulderHazardService: Workspace." .. name .. " not found — that spawn is disabled")
+		warn("BoulderHazardService: BlindObby." .. name .. " not found — that spawn is disabled")
 	end
 end
 

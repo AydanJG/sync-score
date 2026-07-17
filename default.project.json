@@ -15,7 +15,16 @@
         "RoundEnded": {
           "$className": "RemoteEvent"
         },
-        "RequestPairing": {
+        "CameraSync": {
+          "$className": "UnreliableRemoteEvent"
+        },
+        "RequestGameStart": {
+          "$className": "RemoteEvent"
+        },
+        "GameStarting": {
+          "$className": "RemoteEvent"
+        },
+        "PairingCountdown": {
           "$className": "RemoteEvent"
         }
       }

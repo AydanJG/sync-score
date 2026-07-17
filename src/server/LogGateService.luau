@@ -26,9 +26,15 @@ local KNOCKBACK_DURATION = 1.2 -- seconds PlatformStand stays on so physics carr
 local KNOCKBACK_COOLDOWN = 1 -- seconds before the same character can be knocked back again
 local WAIT_TIMEOUT = 10
 
-local gate = Workspace:WaitForChild("Log Gate", WAIT_TIMEOUT)
+local blindObby = Workspace:WaitForChild("BlindObby", WAIT_TIMEOUT)
+if not blindObby then
+	warn("LogGateService: Workspace.BlindObby not found within " .. WAIT_TIMEOUT .. "s — hazard disabled")
+	return LogGateService
+end
+
+local gate = blindObby:WaitForChild("Log Gate", WAIT_TIMEOUT)
 if not gate then
-	warn('LogGateService: Workspace."Log Gate" not found within ' .. WAIT_TIMEOUT .. "s — hazard disabled")
+	warn('LogGateService: BlindObby."Log Gate" not found within ' .. WAIT_TIMEOUT .. "s — hazard disabled")
 	return LogGateService
 end
 

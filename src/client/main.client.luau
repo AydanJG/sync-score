@@ -4,8 +4,10 @@ local Players = game:GetService("Players")
 local Config = require(ReplicatedStorage.Shared.Config)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local BlindOverlay = require(script.Parent.UI.BlindOverlay)
-local LobbyScreen = require(script.Parent.UI.LobbyScreen)
+local StartGameScreen = require(script.Parent.UI.StartGameScreen)
+local PairingCountdownScreen = require(script.Parent.UI.PairingCountdownScreen)
 local ResultsScreen = require(script.Parent.UI.ResultsScreen)
+local CameraLink = require(script.Parent.CameraLink)
 
 local player = Players.LocalPlayer
 
@@ -42,21 +44,35 @@ local function hideGuideLabel()
 	end
 end
 
+-- The Match Room's pairing-pad countdown is a separate, continuously
+-- repeating cycle from the Start Game countdown -- once Start Game's own
+-- countdown finishes (the moment LobbyService will have teleported this
+-- client into the Match Room), start showing it.
+Remotes.GameStarting.OnClientEvent:Connect(function(duration: number)
+	task.delay(duration, function()
+		PairingCountdownScreen.start()
+	end)
+end)
+
 Remotes.RoundStarted.OnClientEvent:Connect(function(data)
-	LobbyScreen.hide()
+	StartGameScreen.hide()
+	PairingCountdownScreen.stop()
 	if data.role == Config.ROLE_BLIND then
 		BlindOverlay.show()
+		CameraLink.startBroadcasting()
 	else
 		showGuideLabel()
+		CameraLink.startReceiving()
 	end
 end)
 
 Remotes.RoundEnded.OnClientEvent:Connect(function(data)
 	BlindOverlay.hide()
 	hideGuideLabel()
+	CameraLink.stop()
 	ResultsScreen.show(data)
 end)
 
-LobbyScreen.show()
+StartGameScreen.show()
 
 print("Client started")
